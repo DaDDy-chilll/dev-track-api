@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DEV_DATABASE_URL")
+}
+
+model m_project {
+  id           Int           @id @default(autoincrement())
+  name         String
+  image_id     Int?          @unique
+  status       ProjectStatus @default(PLANING)
+  created_at   DateTime      @default(now())
+  updated_at   DateTime      @default(now())
+  color        String?       @default("#2196F3")
+  isNew        Boolean?      @default(true)
+  task_count   Decimal?      @default(0) @db.Decimal
+  member_count Decimal?      @default(0) @db.Decimal
+  image        t_image?      @relation(fields: [image_id], references: [id])
+  tasks        t_task[]      // One-to-many relationship: one project has many tasks
+}
+
+model t_image {
+  id         Int        @id @default(autoincrement())
+  filename   String
+  mimetype   String
+  url        String
+  created_at DateTime   @default(now())
+  updated_at DateTime   @default(now())
+  project    m_project?
+}
+
+model t_task {
+  id         Int          @id @default(autoincrement())
+  name       String
+  duration   DateTime
+  priority   TaskPriority
+  status     TaskStatus
+  progress   Int          @default(0)
+  created_at DateTime     @default(now())
+  updated_at DateTime     @default(now())
+  project_id Int?         // Foreign key to m_project
+  project    m_project?   @relation(fields: [project_id], references: [id])
+}
+
+enum ProjectStatus {
+  PLANING
+  DEVELOPMENT
+  COMPLETED
+  MAINTENANCE
+  HOLDING
+  FINISHED
+}
+
+enum TaskStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  DONE
+  IN_REVIEW
+  IN_TEST
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
