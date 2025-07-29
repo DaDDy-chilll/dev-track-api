@@ -11,8 +11,11 @@ async function bootstrap() {
         return callback(null, true);
       }
 
-      if (origin === 'http://localhost:5173') {
-        // Allow dev server origin
+      if (
+        origin === 'http://localhost:5173' ||
+        origin === 'http://localhost:5174'
+      ) {
+        // Allow dev server origins
         return callback(null, true);
       }
 
