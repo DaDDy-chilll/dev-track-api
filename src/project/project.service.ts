@@ -6,6 +6,7 @@ import {
   BadRequestException,
   NotFoundException,
 } from '../common/exceptions/app.exception';
+import { addDays, isAfter } from 'date-fns';
 
 @Injectable()
 export class ProjectService {
@@ -29,7 +30,9 @@ export class ProjectService {
 
   async findAll() {
     try {
-      return await this.projectRepo.findAll();
+      const projects = await this.projectRepo.findAll();
+      this.checkIsNewProject(projects);
+      return projects;
     } catch (error) {
       this.logger.error(
         `Failed to fetch projects: ${error.message}`,
@@ -98,5 +101,28 @@ export class ProjectService {
       );
       throw new BadRequestException(`Failed to delete project with ID ${id}`);
     }
+  }
+
+  private async checkIsNewProject(project: any[]) {
+    project.forEach(async (project) => {
+      if (project.isNew === true) {
+        const createdAt = new Date(project.created_at);
+        const oneWeekLater = addDays(createdAt, 7);
+        const today = new Date();
+        if (isAfter(today, oneWeekLater)) {
+          try {
+            await this.projectRepo.update(project.id, { isNew: false });
+          } catch (error) {
+            this.logger.error(
+              `Failed to update project ${project.id}: ${error.message}`,
+              error.stack,
+            );
+            throw new BadRequestException(
+              `Failed to update project with ID ${project.id}`,
+            );
+          }
+        }
+      }
+    });
   }
 }

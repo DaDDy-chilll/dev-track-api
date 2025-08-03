@@ -14,7 +14,7 @@ export class CreateTaskDto {
 
   @IsISO8601()
   @Type(() => Date)
-  duration: Date;
+  due_time: Date;
 
   @IsEnum(TaskStatus)
   status: TaskStatus;

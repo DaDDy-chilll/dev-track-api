@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("PRO_DATABASE_URL")
+  url      = env("DATABASE_URL")
 }
 
 model m_project {
@@ -16,10 +16,10 @@ model m_project {
   updated_at   DateTime      @default(now())
   color        String?       @default("#2196F3")
   isNew        Boolean?      @default(true)
-  task_count   Decimal?      @default(0) @db.Decimal
   member_count Decimal?      @default(0) @db.Decimal
+  task_count   Decimal?      @default(0) @db.Decimal
   image        t_image?      @relation(fields: [image_id], references: [id])
-  tasks        t_task[]      // One-to-many relationship: one project has many tasks
+  tasks        t_task[]
 }
 
 model t_image {
@@ -35,13 +35,13 @@ model t_image {
 model t_task {
   id         Int          @id @default(autoincrement())
   name       String
-  duration   DateTime
   priority   TaskPriority
   status     TaskStatus
   progress   Int          @default(0)
   created_at DateTime     @default(now())
   updated_at DateTime     @default(now())
-  project_id Int?         // Foreign key to m_project
+  project_id Int?
+  due_time   DateTime
   project    m_project?   @relation(fields: [project_id], references: [id])
 }
 

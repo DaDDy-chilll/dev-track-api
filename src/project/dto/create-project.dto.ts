@@ -26,4 +26,12 @@ export class CreateProjectDto {
   @IsBoolean()
   @IsOptional()
   isNew?: boolean;
+
+  @IsInt()
+  @IsOptional()
+  task_count?: number;
+
+  @IsInt()
+  @IsOptional()
+  member_count?: number;
 }

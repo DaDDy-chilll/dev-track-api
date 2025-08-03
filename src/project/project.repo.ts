@@ -12,31 +12,45 @@ export class ProjectRepo {
   }
 
   findAll() {
-    return this.prisma.m_project.findMany();
+    return this.prisma.m_project.findMany({
+      include: {
+        _count: {
+          select: {
+            tasks: true,
+          },
+        },
+        image: true, // Include the related image
+      },
+      orderBy: {
+        id: 'desc',
+      },
+    });
   }
 
   findOne(id: number) {
     return this.prisma.m_project.findUnique({
-      where: {
-        id,
+      where: { id },
+      include: {
+        _count: {
+          select: {
+            tasks: true,
+          },
+        },
+        image: true, // Include the related image
       },
     });
   }
 
   update(id: number, updateProjectDto: UpdateProjectDto) {
     return this.prisma.m_project.update({
-      where: {
-        id,
-      },
+      where: { id },
       data: updateProjectDto,
     });
   }
 
   remove(id: number) {
     return this.prisma.m_project.delete({
-      where: {
-        id,
-      },
+      where: { id },
     });
   }
 }
