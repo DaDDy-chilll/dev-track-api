@@ -32,7 +32,7 @@ jobs:
           ECR_REPOSITORY=dev-track-api
           
           # Build Docker image
-          docker build -t $ECR_REPOSITORY:$IMAGE_TAG ./web-services/dev-track-api
+          docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
           
           # Tag for ECR
           docker tag $ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
