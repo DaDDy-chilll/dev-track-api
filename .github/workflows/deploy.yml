@@ -55,5 +55,5 @@ jobs:
           script: |
             cd ~/SERVICES
             aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin 770937608951.dkr.ecr.ap-southeast-1.amazonaws.com
-            docker-compose pull dev-track-api
-            docker-compose up -d dev-track-api
+            docker compose pull dev-track-api
+            docker compose up -d dev-track-api
