@@ -45,6 +45,15 @@ model t_task {
   project    m_project?   @relation(fields: [project_id], references: [id])
 }
 
+model t_project_task_status {
+  id         Int        @id @default(autoincrement())
+  project_id Int
+  status     TaskStatus
+  count      Int        @default(0)
+  date       DateTime   @default(now())
+  month      String?
+}
+
 enum ProjectStatus {
   PLANING
   DEVELOPMENT

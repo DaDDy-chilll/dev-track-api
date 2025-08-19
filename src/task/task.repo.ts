@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, TaskStatus } from '@prisma/client';
+import { endOfMonth, startOfMonth } from 'date-fns';
+import { formatInTimeZone, toDate } from 'date-fns-tz';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
-
 @Injectable()
 export class TaskRepo {
   constructor(private prisma: PrismaClient) {}
@@ -66,9 +67,9 @@ export class TaskRepo {
     return this.prisma.t_task.findMany();
   }
 
-  findOne(id: number) {
+  findOne(id: number, projectId?: number) {
     return this.prisma.t_task.findUnique({
-      where: { id },
+      where: { id, project_id: projectId },
     });
   }
 
@@ -109,6 +110,77 @@ export class TaskRepo {
   findAllByProjectId(projectId: number) {
     return this.prisma.t_task.findMany({
       where: { project_id: projectId },
+    });
+  }
+
+  async deleteByProjectId(projectId: number) {
+    try {
+      // Delete all tasks associated with the project
+      const result = await this.prisma.t_task.deleteMany({
+        where: { project_id: projectId },
+      });
+
+      // Update the project's task count to 0 since all tasks are deleted
+      await this.prisma.m_project.update({
+        where: { id: projectId },
+        data: { task_count: 0 },
+      });
+
+      return result;
+    } catch (error) {
+      throw new Error(
+        `Failed to delete tasks for project ${projectId}: ${error.message}`,
+      );
+    }
+  }
+
+  async addCount(projectId: number, status: TaskStatus) {
+    // Get current time in Myanmar Time (UTC+6:30)
+    const myanmarTimeZone = 'Asia/Yangon';
+    const now = new Date();
+    const myanmarDate = toDate(now, { timeZone: myanmarTimeZone });
+
+    const start = startOfMonth(myanmarDate);
+    const end = endOfMonth(myanmarDate);
+
+    // Format dates for database query (in Myanmar Time)
+    const formatForDB = "yyyy-MM-dd'T'HH:mm:ss.SSSxxx";
+    const startStr = formatInTimeZone(start, myanmarTimeZone, formatForDB);
+    const endStr = formatInTimeZone(end, myanmarTimeZone, formatForDB);
+
+    // Try to find a record with this projectId and status
+    const existing = await this.prisma.t_project_task_status.findFirst({
+      where: {
+        project_id: projectId,
+        status: status,
+        date: {
+          gte: new Date(startStr),
+          lte: new Date(endStr),
+        },
+      },
+    });
+
+    // Check if the existing record is from the current month
+    if (existing) {
+      // If exists in current month, increment the count
+      return this.prisma.t_project_task_status.update({
+        where: { id: existing.id },
+        data: {
+          count: { increment: 1 },
+          date: now,
+        },
+      });
+    }
+
+    // If not exists or from previous month, create a new record
+    return this.prisma.t_project_task_status.create({
+      data: {
+        project_id: projectId,
+        status,
+        count: 1,
+        date: now,
+        month: formatInTimeZone(now, myanmarTimeZone, 'yyyy-MM'),
+      },
     });
   }
 }

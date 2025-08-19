@@ -10,21 +10,39 @@ async function bootstrap() {
 
   app.enableCors({
     origin: (origin, callback) => {
-      if (!origin || origin.startsWith('file://')) {
-        // Allow file:// from Electron production build
+      // Allow requests with no origin (like mobile apps, Electron apps, Postman, etc.)
+      if (!origin) {
         return callback(null, true);
       }
 
+      // Allow file:// from Electron production build
+      if (origin.startsWith('file://')) {
+        return callback(null, true);
+      }
+
+      // Allow localhost development servers
       if (
         origin === 'http://localhost:5173' ||
-        origin === 'http://localhost:5174'
+        origin === 'http://localhost:5174' ||
+        origin.startsWith('http://localhost:') ||
+        origin.startsWith('https://localhost:')
       ) {
-        // Allow dev server origins
         return callback(null, true);
       }
 
-      // Block everything else
-      return callback(new Error('Not allowed by CORS'));
+      // Allow Electron app origins (they might use custom protocols)
+      if (
+        origin.startsWith('app://') ||
+        origin.startsWith('electron://') ||
+        origin.includes('electron')
+      ) {
+        return callback(null, true);
+      }
+
+      // For production, you might want to be more specific about allowed origins
+      // For now, allowing all origins for Electron compatibility
+      console.log('CORS: Allowing origin:', origin);
+      return callback(null, true);
     },
     credentials: true,
   });

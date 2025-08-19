@@ -37,7 +37,7 @@ export class TaskController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.taskService.remove(+id);
+  remove(@Param('id') id: string, @Query('projectId') projectId: string) {
+    return this.taskService.remove(+id, +projectId);
   }
 }

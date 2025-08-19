@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { ProjectRepo } from './project.repo';
+import { TaskRepo } from '../task/task.repo';
 import {
   BadRequestException,
   NotFoundException,
@@ -12,7 +13,10 @@ import { addDays, isAfter } from 'date-fns';
 export class ProjectService {
   private readonly logger = new Logger(ProjectService.name);
 
-  constructor(private projectRepo: ProjectRepo) {}
+  constructor(
+    private projectRepo: ProjectRepo,
+    private taskRepo: TaskRepo,
+  ) {}
 
   async create(createProjectDto: CreateProjectDto) {
     try {
@@ -32,6 +36,19 @@ export class ProjectService {
     try {
       const projects = await this.projectRepo.findAll();
       this.checkIsNewProject(projects);
+      return projects;
+    } catch (error) {
+      this.logger.error(
+        `Failed to fetch projects: ${error.message}`,
+        error.stack,
+      );
+      throw new BadRequestException('Failed to fetch projects');
+    }
+  }
+
+  async findAllStatus() {
+    try {
+      const projects = await this.projectRepo.findAllStatus();
       return projects;
     } catch (error) {
       this.logger.error(
@@ -90,6 +107,10 @@ export class ProjectService {
         throw new NotFoundException(`Project with ID ${id}`);
       }
 
+      // Delete all tasks associated with this project
+      await this.taskRepo.deleteByProjectId(id);
+
+      // Delete the project
       return await this.projectRepo.remove(id);
     } catch (error) {
       if (error instanceof NotFoundException) {

@@ -11,6 +11,22 @@ export class ProjectRepo {
     return this.prisma.m_project.create({ data: createProjectDto });
   }
 
+  findAllStatus() {
+    return this.prisma.m_project.findMany({
+      select: {
+        id: true,
+        name: true,
+        status: true,
+        color: true,
+        _count: {
+          select: {
+            tasks: true,
+          },
+        },
+      },
+    });
+  }
+
   findAll() {
     return this.prisma.m_project.findMany({
       include: {

@@ -18,7 +18,17 @@ export class TaskService {
   ) {}
 
   async create(createTaskDto: CreateTaskDto) {
+    const project = await this.projectRepo.findOne(createTaskDto.project_id);
+    if (!project) {
+      throw new NotFoundException(
+        `Project with ID ${createTaskDto.project_id}`,
+      );
+    }
     try {
+      await this.taskRepo.addCount(
+        createTaskDto.project_id,
+        createTaskDto.status,
+      );
       return await this.taskRepo.create(createTaskDto);
     } catch (error) {
       this.logger.error(`Failed to create task: ${error.message}`, error.stack);
@@ -57,11 +67,14 @@ export class TaskService {
   async update(id: number, updateTaskDto: UpdateTaskDto) {
     try {
       // Check if task exists
-      const exists = await this.taskRepo.findOne(id);
+      const exists = await this.taskRepo.findOne(id, updateTaskDto.project_id);
       if (!exists) {
         throw new NotFoundException(`Task with ID ${id}`);
       }
-
+      await this.taskRepo.addCount(
+        updateTaskDto.project_id,
+        updateTaskDto.status,
+      );
       return await this.taskRepo.update(id, updateTaskDto);
     } catch (error) {
       if (error instanceof NotFoundException) {
@@ -75,10 +88,10 @@ export class TaskService {
     }
   }
 
-  async remove(id: number) {
+  async remove(id: number, projectId?: number) {
     try {
       // Check if task exists
-      const exists = await this.taskRepo.findOne(id);
+      const exists = await this.taskRepo.findOne(id, projectId);
       if (!exists) {
         throw new NotFoundException(`Task with ID ${id}`);
       }

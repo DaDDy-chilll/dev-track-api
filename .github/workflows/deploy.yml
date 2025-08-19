@@ -1,0 +1,59 @@
+name: Deploy to ECR and EC2
+
+on:
+  push:
+    branches:
+      - main   # or master depending on your branch
+
+jobs:
+  build-and-push:
+    name: Build and Push Docker Image to ECR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-southeast-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, Tag, and Push image
+        run: |
+          IMAGE_TAG=latest
+          ECR_REGISTRY=770937608951.dkr.ecr.ap-southeast-1.amazonaws.com
+          ECR_REPOSITORY=dev-track-api
+          
+          # Build Docker image
+          docker build -t $ECR_REPOSITORY:$IMAGE_TAG ./web-services/dev-track-api
+          
+          # Tag for ECR
+          docker tag $ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          
+          # Push to ECR
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+  deploy:
+    name: Deploy on EC2
+    runs-on: ubuntu-latest
+    needs: build-and-push
+
+    steps:
+      - name: SSH into EC2 and deploy
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/SERVICES
+            aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin 770937608951.dkr.ecr.ap-southeast-1.amazonaws.com
+            docker-compose pull dev-track-api
+            docker-compose up -d dev-track-api
