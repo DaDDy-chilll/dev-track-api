@@ -148,7 +148,6 @@ export class TaskRepo {
     const startStr = formatInTimeZone(start, myanmarTimeZone, formatForDB);
     const endStr = formatInTimeZone(end, myanmarTimeZone, formatForDB);
 
-    // Try to find a record with this projectId and status
     const existing = await this.prisma.t_project_task_status.findFirst({
       where: {
         project_id: projectId,
@@ -160,9 +159,7 @@ export class TaskRepo {
       },
     });
 
-    // Check if the existing record is from the current month
     if (existing) {
-      // If exists in current month, increment the count
       return this.prisma.t_project_task_status.update({
         where: { id: existing.id },
         data: {
