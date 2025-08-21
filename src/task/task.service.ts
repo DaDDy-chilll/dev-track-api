@@ -66,15 +66,21 @@ export class TaskService {
 
   async update(id: number, updateTaskDto: UpdateTaskDto) {
     try {
-      // Check if task exists
-      const exists = await this.taskRepo.findOne(id, updateTaskDto.project_id);
-      if (!exists) {
+      // Always fetch the existing task first
+      const existing = await this.taskRepo.findOne(id);
+      if (!existing) {
         throw new NotFoundException(`Task with ID ${id}`);
       }
-      await this.taskRepo.addCount(
-        updateTaskDto.project_id,
-        updateTaskDto.status,
-      );
+
+      // Derive projectId and status if not provided in DTO
+      const projectId = updateTaskDto.project_id ?? existing.project_id;
+      if (!projectId) {
+        throw new BadRequestException('project_id is required for task update');
+      }
+      const status = updateTaskDto.status ?? existing.status;
+
+      await this.taskRepo.addCount(projectId, status);
+
       return await this.taskRepo.update(id, updateTaskDto);
     } catch (error) {
       if (error instanceof NotFoundException) {
