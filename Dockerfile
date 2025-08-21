@@ -41,12 +41,18 @@ RUN npm ci --only=production
 # Copy prisma schema
 COPY prisma ./prisma/
 
+# Ensure Prisma client is generated in prod image
+RUN npx prisma generate
+
 # Copy built application from build stage
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
 
 # Expose API port
 EXPOSE 5001
+
+# Run Prisma migration
+RUN npm run prisma:prod:migrate
 
 # Start the application
 CMD ["node", "dist/main.js"]
