@@ -34,4 +34,8 @@ export class CreateProjectDto {
   @IsInt()
   @IsOptional()
   member_count?: number;
+
+  @IsString()
+  @IsOptional()
+  project_file_url?: string;
 }

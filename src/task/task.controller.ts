@@ -11,6 +11,7 @@ import {
 import { TaskService } from './task.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { GetTaskDto } from './dto/get-task.dto';
 
 @Controller('task')
 export class TaskController {
@@ -22,8 +23,18 @@ export class TaskController {
   }
 
   @Get()
-  findAll(@Query('projectId') projectId: string) {
-    return this.taskService.findAllByProjectId(+projectId);
+  findAll(@Query() query: GetTaskDto) {
+    return this.taskService.findAll(query);
+  }
+
+  // @Get()
+  // findByProjectId(@Query('projectId') projectId: string) {
+  //   return this.taskService.findAllByProjectId(+projectId);
+  // }
+
+  @Get('status')
+  findAllByStatus() {
+    return this.taskService.findAllByStatus();
   }
 
   @Get(':id')

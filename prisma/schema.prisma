@@ -19,6 +19,7 @@ model m_project {
   member_count Decimal?      @default(0) @db.Decimal
   task_count   Decimal?      @default(0) @db.Decimal
   image        t_image?      @relation(fields: [image_id], references: [id])
+  project_file_url String?
   tasks        t_task[]
 }
 
@@ -41,7 +42,11 @@ model t_task {
   created_at DateTime     @default(now())
   updated_at DateTime     @default(now())
   project_id Int?
-  due_time   DateTime
+  start_date DateTime?
+  end_date DateTime?
+  due_time   DateTime   
+  branch_name String? @default("main")
+  category   TaskCategory @default(FEAUTURE)
   project    m_project?   @relation(fields: [project_id], references: [id])
 }
 
@@ -52,6 +57,19 @@ model t_project_task_status {
   count      Int        @default(0)
   date       DateTime   @default(now())
   month      String?
+}
+
+model t_allowed_device {
+  id         Int      @id @default(autoincrement())
+  ip_address String?  @unique
+  mac_address String? @unique
+  device_name String?
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+
+  @@index([ip_address])
+  @@index([mac_address])
 }
 
 enum ProjectStatus {
@@ -76,4 +94,13 @@ enum TaskPriority {
   MEDIUM
   HIGH
   URGENT
+}
+
+
+enum TaskCategory {
+FEAUTURE
+BUG
+REFACTOR
+TEST
+ERROR
 }

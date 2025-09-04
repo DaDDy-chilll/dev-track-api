@@ -24,7 +24,10 @@
     "prisma:studio": "prisma studio",
     "prisma:dev-env": "DATABASE_URL=$(grep DATABASE_URL .env.development | cut -d '=' -f2-) npx prisma",
     "prisma:prod-env": "DATABASE_URL=$(grep DATABASE_URL .env.production | cut -d '=' -f2-) npx prisma",
-    "prisma:prod:migrate": "npm run prisma:prod-env -- migrate deploy && npm run prisma:generate"
+    "prisma:prod:migrate": "npm run prisma:prod-env -- migrate deploy && npm run prisma:generate",
+    "setup:devices": "npx ts-node scripts/add-allowed-devices.ts",
+    "setup:devices:prod": "DATABASE_URL=$(grep DATABASE_URL .env.production | cut -d '=' -f2-) npx ts-node scripts/add-allowed-devices.ts",
+    "setup:devices:dev": "DATABASE_URL=$(grep DATABASE_URL .env.development | cut -d '=' -f2-) npx ts-node scripts/add-allowed-devices.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.2",

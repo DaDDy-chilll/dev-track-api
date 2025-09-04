@@ -41,7 +41,6 @@ async function bootstrap() {
 
       // For production, you might want to be more specific about allowed origins
       // For now, allowing all origins for Electron compatibility
-      console.log('CORS: Allowing origin:', origin);
       return callback(null, true);
     },
     credentials: true,

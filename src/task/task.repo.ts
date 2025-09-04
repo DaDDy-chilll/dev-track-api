@@ -4,6 +4,7 @@ import { endOfMonth, startOfMonth } from 'date-fns';
 import { formatInTimeZone, toDate } from 'date-fns-tz';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { GetTaskDto } from './dto/get-task.dto';
 @Injectable()
 export class TaskRepo {
   constructor(private prisma: PrismaClient) {}
@@ -28,6 +29,10 @@ export class TaskRepo {
         status: createTaskDto.status,
         priority: createTaskDto.priority,
         project_id: createTaskDto.project_id,
+        category: createTaskDto.category,
+        branch_name: createTaskDto.branch_name,
+        start_date: createTaskDto.start_date,
+        end_date: createTaskDto.end_date,
       },
     });
 
@@ -63,8 +68,44 @@ export class TaskRepo {
     return deletedTask;
   }
 
-  findAll() {
-    return this.prisma.t_task.findMany();
+  findAll(query: GetTaskDto) {
+    if (query.start_date && query.end_date) {
+      const startDate = new Date(query.start_date);
+      startDate.setUTCHours(0, 0, 0, 0);
+
+      const endDate = new Date(query.end_date);
+      endDate.setUTCHours(23, 59, 59, 999);
+
+      return this.prisma.t_task.findMany({
+        where: {
+          start_date: {
+            lte: endDate,
+          },
+          end_date: {
+            gte: startDate,
+          },
+        },
+        include: {
+          project: true,
+        },
+      });
+    } else {
+      return this.prisma.t_task.findMany({
+        where: {
+          name: {
+            contains: query.name,
+          },
+          status: query.status,
+          priority: query.priority,
+          project_id: +query.projectId,
+          category: query.category,
+          branch_name: query.branch_name,
+        },
+        include: {
+          project: true,
+        },
+      });
+    }
   }
 
   findOne(id: number, projectId?: number) {
@@ -75,36 +116,24 @@ export class TaskRepo {
 
   async update(id: number, updateTaskDto: UpdateTaskDto) {
     // If project_id is being updated, we need to update counts for both old and new projects
-    if (updateTaskDto.project_id !== undefined) {
-      const task = await this.prisma.t_task.findUnique({
-        where: { id },
-        select: { project_id: true },
-      });
 
-      const updatedTask = await this.prisma.t_task.update({
-        where: { id },
-        data: updateTaskDto,
-      });
-
-      // Update task counts for both old and new projects
-      const updatePromises = [];
-      if (task?.project_id) {
-        updatePromises.push(this.updateProjectTaskCount(task.project_id));
-      }
-      if (updateTaskDto.project_id) {
-        updatePromises.push(
-          this.updateProjectTaskCount(updateTaskDto.project_id),
-        );
-      }
-
-      await Promise.all(updatePromises);
-      return updatedTask;
-    }
-
-    return this.prisma.t_task.update({
+    const updatedTask = await this.prisma.t_task.update({
       where: { id },
-      data: updateTaskDto,
+      data: {
+        name: updateTaskDto.name,
+        priority: updateTaskDto.priority,
+        status: updateTaskDto.status,
+        due_time: updateTaskDto.due_time,
+        project_id: updateTaskDto.project_id,
+        progress: updateTaskDto.progress,
+        category: updateTaskDto.category,
+        branch_name: updateTaskDto.branch_name,
+        start_date: updateTaskDto.start_date,
+        end_date: updateTaskDto.end_date,
+      },
     });
+
+    return updatedTask;
   }
 
   findAllByProjectId(projectId: number) {
@@ -113,10 +142,23 @@ export class TaskRepo {
     });
   }
 
+  findAllByStatus() {
+    return this.prisma.t_project_task_status.groupBy({
+      by: ['status'],
+      _sum: {
+        count: true,
+      },
+    });
+  }
+
   async deleteByProjectId(projectId: number) {
     try {
       // Delete all tasks associated with the project
       const result = await this.prisma.t_task.deleteMany({
+        where: { project_id: projectId },
+      });
+
+      await this.prisma.t_project_task_status.deleteMany({
         where: { project_id: projectId },
       });
 

@@ -9,11 +9,15 @@ import {
   Body,
   ParseIntPipe,
   BadRequestException,
+  Res,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ImageService } from './image.service';
 import { UploadImageDto } from './dto/upload-image.dto';
 import { ApiBody, ApiConsumes, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
+import * as path from 'path';
+import * as fs from 'fs';
 
 @ApiTags('images')
 @Controller('images')
@@ -49,6 +53,21 @@ export class ImageController {
     }
 
     return this.imageService.uploadImage(file, body.projectId);
+  }
+
+  @Get('images/:filename')
+  @ApiResponse({ status: 200, description: 'Returns the image file' })
+  @ApiResponse({ status: 404, description: 'Image file not found' })
+  async getImageFile(
+    @Param('filename') filename: string,
+    @Res() res: Response,
+  ) {
+    const filePath = path.join(process.cwd(), 'uploads', filename);
+    if (!fs.existsSync(filePath)) {
+      throw new BadRequestException('Image file not found');
+    }
+
+    return res.sendFile(filePath);
   }
 
   @Get(':id')

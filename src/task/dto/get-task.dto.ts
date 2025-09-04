@@ -8,26 +8,31 @@ import {
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 
-export class CreateTaskDto {
+export class GetTaskDto {
   @IsString()
-  name: string;
+  @IsOptional()
+  name?: string;
 
   @IsISO8601()
   @Type(() => Date)
-  due_time: Date;
+  @IsOptional()
+  due_time?: Date;
 
   @IsEnum(TaskStatus)
-  status: TaskStatus;
+  @IsOptional()
+  status?: TaskStatus;
 
   @IsEnum(TaskPriority)
-  priority: TaskPriority;
+  @IsOptional()
+  priority?: TaskPriority;
 
   @IsInt()
   @IsOptional()
   progress?: number;
 
   @IsEnum(TaskCategory)
-  category: TaskCategory;
+  @IsOptional()
+  category?: TaskCategory;
 
   @IsString()
   @IsOptional()
@@ -35,14 +40,26 @@ export class CreateTaskDto {
 
   @IsInt()
   @IsOptional()
-  @Transform(({ value }) => (value ? parseInt(value) : null))
-  project_id?: number;
+  @Transform(({ value }) => (value ? parseInt(value) : undefined))
+  projectId?: number;
 
   @IsISO8601()
   @Type(() => Date)
-  start_date: Date;
+  @IsOptional()
+  created_at?: Date;
 
   @IsISO8601()
   @Type(() => Date)
-  end_date: Date;
+  @IsOptional()
+  updated_at?: Date;
+
+  @IsISO8601()
+  @Type(() => Date)
+  @IsOptional()
+  start_date?: Date;
+
+  @IsISO8601()
+  @Type(() => Date)
+  @IsOptional()
+  end_date?: Date;
 }

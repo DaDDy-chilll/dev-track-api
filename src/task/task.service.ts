@@ -8,6 +8,7 @@ import { UpdateTaskDto } from './dto/update-task.dto';
 import { TaskRepo } from './task.repo';
 import { Logger } from '@nestjs/common';
 import { ProjectRepo } from '../project/project.repo';
+import { GetTaskDto } from './dto/get-task.dto';
 
 @Injectable()
 export class TaskService {
@@ -36,9 +37,9 @@ export class TaskService {
     }
   }
 
-  async findAll() {
+  async findAll(query: GetTaskDto) {
     try {
-      return await this.taskRepo.findAll();
+      return await this.taskRepo.findAll(query);
     } catch (error) {
       this.logger.error(`Failed to fetch tasks: ${error.message}`, error.stack);
       throw new BadRequestException('Failed to fetch tasks');
@@ -73,13 +74,14 @@ export class TaskService {
       }
 
       // Derive projectId and status if not provided in DTO
-      const projectId = updateTaskDto.project_id ?? existing.project_id;
+      const projectId = updateTaskDto.project_id;
       if (!projectId) {
         throw new BadRequestException('project_id is required for task update');
       }
-      const status = updateTaskDto.status ?? existing.status;
-
-      await this.taskRepo.addCount(projectId, status);
+      if (updateTaskDto.isUpdateStatus) {
+        const status = updateTaskDto.status;
+        await this.taskRepo.addCount(projectId, status);
+      }
 
       return await this.taskRepo.update(id, updateTaskDto);
     } catch (error) {
@@ -131,6 +133,18 @@ export class TaskService {
       throw new BadRequestException(
         `Failed to fetch tasks by project ID ${projectId}`,
       );
+    }
+  }
+
+  async findAllByStatus() {
+    try {
+      return await this.taskRepo.findAllByStatus();
+    } catch (error) {
+      this.logger.error(
+        `Failed to fetch tasks by status: ${error.message}`,
+        error.stack,
+      );
+      throw new BadRequestException(`Failed to fetch tasks by status`);
     }
   }
 }
