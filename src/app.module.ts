@@ -12,9 +12,17 @@ import { ImageModule } from './image/image.module';
 import { PowerModule } from './power/power.module';
 import { DeviceModule } from './device/device.module';
 import { DeviceFilterMiddleware } from './common/middleware/device-filter.middleware';
+import { TaskActivityModule } from './task-activity/task-activity.module';
 
 @Module({
-  imports: [ProjectModule, TaskModule, ImageModule, PowerModule, DeviceModule],
+  imports: [
+    ProjectModule,
+    TaskModule,
+    ImageModule,
+    PowerModule,
+    DeviceModule,
+    TaskActivityModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
@@ -26,6 +34,6 @@ export class AppModule implements NestModule {
         path: '/images/*',
         method: RequestMethod.ALL,
       }) // Exclude device management, image endpoints, and API base route from filtering
-      .forRoutes('*'); // Apply to all other routes
+      .forRoutes('v1'); // Apply to all other routes
   }
 }

@@ -36,6 +36,7 @@ export class ProjectRepo {
           },
         },
         image: true, // Include the related image
+        tasks: true,
       },
       orderBy: {
         id: 'desc',

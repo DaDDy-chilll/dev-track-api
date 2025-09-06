@@ -4,9 +4,16 @@ import { TaskController } from './task.controller';
 import { TaskRepo } from './task.repo';
 import { PrismaClient } from '@prisma/client';
 import { ProjectRepo } from '../project/project.repo';
+import { TaskActivityRepo } from '../task-activity/task-activity.repo';
 
 @Module({
   controllers: [TaskController],
-  providers: [TaskService, TaskRepo, PrismaClient, ProjectRepo],
+  providers: [
+    TaskService,
+    TaskRepo,
+    PrismaClient,
+    ProjectRepo,
+    TaskActivityRepo,
+  ],
 })
 export class TaskModule {}

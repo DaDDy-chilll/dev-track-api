@@ -47,7 +47,8 @@ model t_task {
   due_time   DateTime   
   branch_name String? @default("main")
   category   TaskCategory @default(FEAUTURE)
-  project    m_project?   @relation(fields: [project_id], references: [id])
+  project    m_project?     @relation(fields: [project_id], references: [id])
+  activities t_task_activity[]
 }
 
 model t_project_task_status {
@@ -98,9 +99,27 @@ enum TaskPriority {
 
 
 enum TaskCategory {
-FEAUTURE
-BUG
-REFACTOR
-TEST
-ERROR
+  FEAUTURE
+  BUG
+  REFACTOR
+  TEST
+  ERROR
+}
+
+model t_task_activity {
+  id          Int         @id @default(autoincrement())
+  task_id     Int
+  task        t_task      @relation(fields: [task_id], references: [id], onDelete: Cascade)
+  start_time  DateTime?
+  end_time    DateTime?
+  duration    Int?        @default(0) // in minutes
+  percentage  Int         @default(0) // 0-100%
+  status      TaskStatus 
+  notes       String?     @db.Text
+  created_at  DateTime    @default(now())
+  updated_at  DateTime    @updatedAt
+  created_by  String?     @default("daddy") // User who created the activity
+  
+  @@index([task_id])
+  @@index([start_time])
 }

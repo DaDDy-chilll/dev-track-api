@@ -18,9 +18,21 @@ export class GetTaskDto {
   @IsOptional()
   due_time?: Date;
 
-  @IsEnum(TaskStatus)
   @IsOptional()
-  status?: TaskStatus;
+  @Transform(({ value }) => {
+    if (!value) return undefined;
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string') {
+      return value.split(',').map((s: string) => s.trim()) as TaskStatus[];
+    }
+    return [value];
+  })
+  @IsEnum(TaskStatus, {
+    each: true,
+    message:
+      'status must be one of the following: NOT_STARTED, IN_PROGRESS, COMPLETED, IN_REVIEW',
+  })
+  status?: TaskStatus | string;
 
   @IsEnum(TaskPriority)
   @IsOptional()

@@ -68,7 +68,10 @@ export class TaskRepo {
     return deletedTask;
   }
 
-  findAll(query: GetTaskDto) {
+  async findAll(query: GetTaskDto) {
+    const where: any = {};
+
+    // Handle date range filter
     if (query.start_date && query.end_date) {
       const startDate = new Date(query.start_date);
       startDate.setUTCHours(0, 0, 0, 0);
@@ -76,41 +79,59 @@ export class TaskRepo {
       const endDate = new Date(query.end_date);
       endDate.setUTCHours(23, 59, 59, 999);
 
-      return this.prisma.t_task.findMany({
-        where: {
-          start_date: {
-            lte: endDate,
-          },
-          end_date: {
-            gte: startDate,
-          },
-        },
-        include: {
-          project: true,
-        },
-      });
-    } else {
-      return this.prisma.t_task.findMany({
-        where: {
-          name: {
-            contains: query.name,
-          },
-          status: query.status,
-          priority: query.priority,
-          project_id: +query.projectId,
-          category: query.category,
-          branch_name: query.branch_name,
-        },
-        include: {
-          project: true,
-        },
-      });
+      where.start_date = {
+        lte: endDate,
+      };
+      where.end_date = {
+        gte: startDate,
+      };
     }
+
+    // Handle status filter
+    if (query.status && query.status.length > 0) {
+      const statuses = Array.isArray(query.status)
+        ? query.status
+        : query.status.split(',');
+      where.status = {
+        in: statuses,
+      };
+    }
+
+    // Add other filters
+    if (query.name) {
+      where.name = {
+        contains: query.name,
+      };
+    }
+    if (query.priority) {
+      where.priority = query.priority;
+    }
+    if (query.projectId) {
+      where.project_id = +query.projectId;
+    }
+    if (query.category) {
+      where.category = query.category;
+    }
+    if (query.branch_name) {
+      where.branch_name = query.branch_name;
+    }
+
+    return this.prisma.t_task.findMany({
+      where,
+      include: {
+        project: true,
+        activities: true,
+      },
+    });
   }
 
   findOne(id: number, projectId?: number) {
     return this.prisma.t_task.findUnique({
       where: { id, project_id: projectId },
+      include: {
+        project: true,
+        activities: true,
+      },
     });
   }
 
