@@ -30,7 +30,7 @@ export class ProjectController {
     return this.projectService.findAllStatus();
   }
 
-  @Get('test')
+  @Get('testing')
   test() {
     return { test: 'test' };
   }
