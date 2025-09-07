@@ -8,7 +8,18 @@ export class ProjectRepo {
   constructor(private prisma: PrismaClient) {}
 
   create(createProjectDto: CreateProjectDto) {
-    return this.prisma.m_project.create({ data: createProjectDto });
+    const { image_id, ...data } = createProjectDto;
+
+    return this.prisma.m_project.create({
+      data: {
+        ...data,
+        ...(image_id && {
+          image: {
+            connect: { id: image_id },
+          },
+        }),
+      },
+    });
   }
 
   findAllStatus() {
