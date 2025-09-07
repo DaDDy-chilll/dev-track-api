@@ -30,6 +30,11 @@ export class ProjectController {
     return this.projectService.findAllStatus();
   }
 
+  @Get('test')
+  test() {
+    return { test: 'test' };
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.projectService.findOne(+id);
